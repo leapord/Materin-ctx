@@ -1,0 +1,135 @@
+/* Materin Ctx — view styles.
+   Flat `materin-ctx-` prefixed classes; Obsidian CSS variables only. */
+
+/* Layout ------------------------------------------------------------- */
+
+.materin-ctx-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 0;
+}
+
+.materin-ctx-editor {
+	flex: 1;
+	min-height: 0;
+}
+
+.materin-ctx-editor .cm-editor {
+	height: 100%;
+}
+
+.materin-ctx-editor .cm-editor.cm-focused {
+	outline: none;
+}
+
+/* Header bar ---------------------------------------------------------- */
+
+.materin-ctx-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.materin-ctx-title {
+	font-weight: 600;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.materin-ctx-badge {
+	flex-shrink: 0;
+	padding: 1px 6px;
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	font-weight: 600;
+	letter-spacing: 0.03em;
+	color: var(--text-on-accent);
+	background-color: var(--interactive-accent);
+}
+
+.materin-ctx-badge-json {
+	background-color: var(--color-yellow, #b8860b);
+	color: var(--text-normal);
+}
+
+.materin-ctx-badge-jsonc {
+	background-color: var(--color-orange, #c2711d);
+	color: var(--text-normal);
+}
+
+.materin-ctx-badge-yaml {
+	background-color: var(--color-green, #3a7d44);
+	color: var(--text-normal);
+}
+
+.materin-ctx-dirty {
+	color: var(--color-orange, #c2711d);
+	font-size: var(--font-ui-smaller);
+}
+
+.materin-ctx-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+}
+
+.materin-ctx-actions button {
+	padding: 2px 10px;
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+}
+
+.materin-ctx-actions button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.materin-ctx-save:not(:disabled) {
+	color: var(--text-on-accent);
+	background-color: var(--interactive-accent);
+}
+
+/* Banner (external change / deleted file) ----------------------------- */
+
+.materin-ctx-banner {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 10px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-warning, var(--text-muted));
+	background-color: var(--background-modifier-error-hover, var(--background-secondary));
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.materin-ctx-banner button {
+	padding: 1px 10px;
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+}
+
+/* Status bar ----------------------------------------------------------- */
+
+.materin-ctx-status {
+	padding: 4px 10px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	border-top: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.materin-ctx-status-ok {
+	color: var(--text-muted);
+}
+
+.materin-ctx-status-error {
+	color: var(--text-error);
+	cursor: pointer;
+}

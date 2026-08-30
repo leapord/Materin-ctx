@@ -1,0 +1,9 @@
+{
+	"id": "materin-ctx",
+	"name": "Materin Ctx",
+	"version": "0.1.0",
+	"minAppVersion": "1.7.2",
+	"description": "Open JSON / YAML files in a native-feeling editor view with formatting, folding and search.",
+	"author": "leapord",
+	"isDesktopOnly": false
+}
