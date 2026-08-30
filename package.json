@@ -1,6 +1,6 @@
 {
 	"name": "materin-ctx",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Obsidian plugin that opens JSON / YAML files in a native-feeling CodeMirror view with formatting, folding and search.",
 	"main": "main.js",
 	"scripts": {
