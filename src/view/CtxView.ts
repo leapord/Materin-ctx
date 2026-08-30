@@ -24,15 +24,16 @@ import { search, searchKeymap } from "@codemirror/search";
 import {
 	bracketMatching,
 	codeFolding,
-	defaultHighlightStyle,
 	foldAll,
 	foldGutter,
 	foldKeymap,
+	HighlightStyle,
 	indentOnInput,
 	indentUnit,
 	syntaxHighlighting,
 	unfoldAll,
 } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 import { json } from "@codemirror/lang-json";
 import { yaml } from "@codemirror/lang-yaml";
 import { detectKind, type DocKind } from "../core/detect";
@@ -50,6 +51,49 @@ const KIND_LABELS: Record<DocKind, string> = {
 	jsonc: "JSONC",
 	yaml: "YAML",
 };
+
+/**
+ * Syntax colors follow Obsidian's own code-block palette (--code-* variables),
+ * so light and dark themes both render with native contrast.
+ */
+const ctxHighlightStyle = HighlightStyle.define([
+	{ tag: [t.comment, t.lineComment, t.blockComment], color: "var(--code-comment)" },
+	{
+		tag: [
+			t.keyword,
+			t.controlKeyword,
+			t.moduleKeyword,
+			t.definitionKeyword,
+			t.operatorKeyword,
+			t.self,
+		],
+		color: "var(--code-keyword)",
+	},
+	{ tag: [t.string, t.special(t.string), t.character, t.escape], color: "var(--code-string)" },
+	{ tag: [t.number, t.integer, t.float], color: "var(--code-value)" },
+	{ tag: [t.bool, t.null, t.atom, t.unit], color: "var(--code-value)" },
+	{ tag: t.propertyName, color: "var(--code-property)" },
+	{ tag: t.function(t.variableName), color: "var(--code-function)" },
+	{ tag: [t.typeName, t.tagName, t.attributeName], color: "var(--code-tag)" },
+	{ tag: t.operator, color: "var(--code-operator)" },
+	{
+		tag: [
+			t.punctuation,
+			t.separator,
+			t.bracket,
+			t.paren,
+			t.brace,
+			t.squareBracket,
+			t.angleBracket,
+		],
+		color: "var(--code-punctuation)",
+	},
+	{
+		tag: [t.processingInstruction, t.meta, t.annotation, t.documentMeta],
+		color: "var(--code-tag)",
+	},
+	{ tag: t.invalid, color: "var(--text-error)" },
+]);
 
 export class CtxView extends ItemView {
 	private readonly plugin: MaterinCtxPlugin;
@@ -296,7 +340,7 @@ export class CtxView extends ItemView {
 			highlightActiveLine(),
 			indentOnInput(),
 			bracketMatching(),
-			syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+			syntaxHighlighting(ctxHighlightStyle),
 			this.indentComp.of(indentUnit.of(this.indentUnitString())),
 			this.wrapComp.of(settings.wrapLines ? EditorView.lineWrapping : []),
 			this.kind === "yaml" ? yaml() : json(),
@@ -319,17 +363,69 @@ export class CtxView extends ItemView {
 			]),
 			search({ top: true }),
 			EditorView.theme({
-				"&": { height: "100%" },
+				"&": {
+					height: "100%",
+					backgroundColor: "var(--code-background)",
+					color: "var(--code-normal)",
+				},
 				".cm-scroller": {
 					overflow: "auto",
 					fontFamily: "var(--font-monospace)",
+					lineHeight: "1.6",
+				},
+				".cm-content": {
+					caretColor: "var(--text-accent)",
+				},
+				".cm-selectionBackground, &.cm-focused > .cm-scroller .cm-selectionBackground":
+					{ backgroundColor: "var(--text-selection)" },
+				".cm-cursor": {
+					borderLeftColor: "var(--text-accent)",
 				},
 				".cm-gutters": {
-					backgroundColor: "var(--background-secondary)",
+					backgroundColor: "var(--code-background)",
 					borderColor: "var(--background-modifier-border)",
+					color: "var(--text-faint)",
 				},
 				".cm-activeLine": {
 					backgroundColor: "var(--background-secondary)",
+				},
+				".cm-activeLineGutter": {
+					backgroundColor: "var(--background-secondary)",
+					color: "var(--text-muted)",
+				},
+				".cm-foldGutter": {
+					color: "var(--text-faint)",
+				},
+				".cm-foldGutter span:hover": {
+					color: "var(--text-muted)",
+				},
+				".cm-panels": {
+					backgroundColor: "var(--background-secondary)",
+					color: "var(--text-normal)",
+				},
+				".cm-panels.cm-panels-top": {
+					borderBottom: "1px solid var(--background-modifier-border)",
+				},
+				".cm-textfield": {
+					backgroundColor: "var(--background-primary)",
+					color: "var(--text-normal)",
+					border: "1px solid var(--background-modifier-border)",
+					borderRadius: "var(--radius-s)",
+				},
+				".cm-button": {
+					backgroundColor: "var(--interactive-normal)",
+					color: "var(--text-normal)",
+					border: "1px solid var(--background-modifier-border)",
+					borderRadius: "var(--radius-s)",
+				},
+				".cm-searchMatch": {
+					backgroundColor: "var(--text-highlight-bg)",
+				},
+				".cm-searchMatch.cm-searchMatch-selected": {
+					backgroundColor: "var(--text-selection)",
+				},
+				".cm-selectionMatch": {
+					backgroundColor: "var(--text-highlight-bg)",
 				},
 			}),
 			EditorView.updateListener.of((update) => {
