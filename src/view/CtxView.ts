@@ -287,7 +287,13 @@ export class CtxView extends ItemView {
 			return;
 		}
 		const text = view.state.doc.toString();
-		await this.app.vault.modify(file, applyEol(text, this.originalEol));
+		try {
+			await this.app.vault.modify(file, applyEol(text, this.originalEol));
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			this.setStatus("error", _("Save failed: {message}", { message }));
+			return;
+		}
 		this.lastSavedMtime = file.stat.mtime;
 		this.setDirty(false);
 		this.setStatus("ok", _("Saved"));
