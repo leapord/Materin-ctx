@@ -387,7 +387,9 @@ export class CtxView extends ItemView {
 				".cm-content": {
 					caretColor: "var(--text-accent)",
 				},
-				".cm-selectionBackground, &.cm-focused > .cm-scroller .cm-selectionBackground":
+				// The focused selector must include `> .cm-selectionLayer` to out-rank
+				// CodeMirror's base theme, otherwise its lavender default wins.
+				".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground":
 					{ backgroundColor: "var(--text-selection)" },
 				".cm-cursor": {
 					borderLeftColor: "var(--text-accent)",
@@ -397,8 +399,10 @@ export class CtxView extends ItemView {
 					borderColor: "var(--background-modifier-border)",
 					color: "var(--text-faint)",
 				},
+				// Must be translucent: drawSelection paints the selection in a layer
+				// beneath the line content, so an opaque active line hides it.
 				".cm-activeLine": {
-					backgroundColor: "var(--background-secondary)",
+					backgroundColor: "var(--background-modifier-hover)",
 				},
 				".cm-activeLineGutter": {
 					backgroundColor: "var(--background-secondary)",
