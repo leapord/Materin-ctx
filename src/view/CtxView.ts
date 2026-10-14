@@ -461,7 +461,7 @@ export class CtxView extends ItemView {
 
 	private setDirty(value: boolean): void {
 		this.dirty = value;
-		this.dirtyEl.toggle(!value);
+		this.dirtyEl.toggle(value);
 		this.saveButton.disabled = !value || this.fileDeleted;
 	}
 
