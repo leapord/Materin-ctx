@@ -65,6 +65,12 @@ describe("formatYaml", () => {
 		expect(out).toBe("a:\n    b: 1\n");
 	});
 
+	it("leaves empty, blank and comment-only YAML unchanged", () => {
+		for (const input of ["", "\n\n", "# only a comment\n"]) {
+			expect(formatYaml(input, { ...SPACE2, lineWidth: 0 })).toBe(input);
+		}
+	});
+
 	it("keeps every document of a multi-document stream", () => {
 		const input = "# first\na:    1\n---\n# second\nb:\n    c: 2\n";
 		expect(formatYaml(input, { ...SPACE2, lineWidth: 0 })).toBe(

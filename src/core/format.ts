@@ -45,6 +45,11 @@ export function formatJsonc(text: string, opts: IndentOptions): string {
  */
 export function formatYaml(text: string, opts: YamlFormatOptions): string {
 	const docs = parseAllDocuments(text);
+	// Empty, whitespace-only and comment-only input parse to zero documents;
+	// leave it alone rather than emitting `null` or dropping the comments.
+	if (docs.length === 0) {
+		return text;
+	}
 	for (const doc of docs) {
 		if (doc.errors.length > 0) {
 			throw yamlErrorToFormatError(text, doc.errors[0]);
