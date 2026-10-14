@@ -65,6 +65,13 @@ describe("formatYaml", () => {
 		expect(out).toBe("a:\n    b: 1\n");
 	});
 
+	it("keeps every document of a multi-document stream", () => {
+		const input = "# first\na:    1\n---\n# second\nb:\n    c: 2\n";
+		expect(formatYaml(input, { ...SPACE2, lineWidth: 0 })).toBe(
+			"# first\na: 1\n---\n# second\nb:\n  c: 2\n",
+		);
+	});
+
 	it("throws a FormatError with position info on parse failure", () => {
 		try {
 			formatYaml("ok: 1\nbad: [1, 2", { ...SPACE2, lineWidth: 0 });
@@ -100,6 +107,20 @@ describe("validateDocument", () => {
 
 	it("accepts valid YAML", () => {
 		expect(validateDocument("a: 1\nb: two", "yaml")).toEqual({ ok: true });
+	});
+
+	it("accepts multi-document YAML", () => {
+		expect(validateDocument("a: 1\n---\nb: 2\n", "yaml")).toEqual({
+			ok: true,
+		});
+	});
+
+	it("reports line of an error in a later YAML document", () => {
+		const result = validateDocument("a: 1\n---\nbad: [1, 2", "yaml");
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.line).toBe(3);
+		}
 	});
 
 	it("reports line for invalid YAML", () => {
