@@ -54,18 +54,18 @@
 }
 
 .materin-ctx-badge-json {
-	background-color: var(--color-yellow, #b8860b);
-	color: var(--text-normal);
+	color: var(--color-yellow);
+	background-color: rgba(var(--color-yellow-rgb), 0.18);
 }
 
 .materin-ctx-badge-jsonc {
-	background-color: var(--color-orange, #c2711d);
-	color: var(--text-normal);
+	color: var(--color-orange);
+	background-color: rgba(var(--color-orange-rgb), 0.18);
 }
 
 .materin-ctx-badge-yaml {
-	background-color: var(--color-green, #3a7d44);
-	color: var(--text-normal);
+	color: var(--color-green);
+	background-color: rgba(var(--color-green-rgb), 0.18);
 }
 
 .materin-ctx-dirty {
