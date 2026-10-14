@@ -104,6 +104,7 @@ export class CtxView extends ItemView {
 	private editor: EditorView | null = null;
 	private dirty = false;
 	private fileDeleted = false;
+	private saving = false;
 	/** mtime of the last write we made ourselves — external-change guard. */
 	private lastSavedMtime = 0;
 
@@ -287,12 +288,15 @@ export class CtxView extends ItemView {
 			return;
 		}
 		const text = view.state.doc.toString();
+		this.saving = true;
 		try {
 			await this.app.vault.modify(file, applyEol(text, this.originalEol));
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			this.setStatus("error", _("Save failed: {message}", { message }));
 			return;
+		} finally {
+			this.saving = false;
 		}
 		this.lastSavedMtime = file.stat.mtime;
 		this.setDirty(false);
@@ -310,7 +314,7 @@ export class CtxView extends ItemView {
 
 		this.titleEl.setText(file.name);
 		this.badgeEl.setText(KIND_LABELS[this.kind]);
-		this.badgeEl.addClass(`materin-ctx-badge-${this.kind}`);
+		this.badgeEl.className = `materin-ctx-badge materin-ctx-badge-${this.kind}`;
 		this.hideBanner();
 		this.buildEditor(content);
 		this.setDirty(false);
@@ -541,7 +545,7 @@ export class CtxView extends ItemView {
 		if (!(file instanceof TFile) || file !== this.file) {
 			return;
 		}
-		if (file.stat.mtime === this.lastSavedMtime) {
+		if (this.saving || file.stat.mtime === this.lastSavedMtime) {
 			return; // our own save echoing back
 		}
 		if (this.dirty) {
