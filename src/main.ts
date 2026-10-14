@@ -1,5 +1,6 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { CtxView, VIEW_TYPE_MATERIN_CTX } from "./view/CtxView";
+import { EXTENSION_KINDS } from "./core/detect";
 import {
 	MaterinCtxSettingTab,
 	type MaterinCtxSettings,
@@ -15,10 +16,7 @@ export default class MaterinCtxPlugin extends Plugin {
 			VIEW_TYPE_MATERIN_CTX,
 			(leaf: WorkspaceLeaf) => new CtxView(leaf, this),
 		);
-		this.registerExtensions(
-			["json", "yaml", "yml", "jsonc"],
-			VIEW_TYPE_MATERIN_CTX,
-		);
+		this.registerExtensions(Object.keys(EXTENSION_KINDS), VIEW_TYPE_MATERIN_CTX);
 
 		this.addCommand({
 			id: "format-document",

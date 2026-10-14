@@ -1,5 +1,5 @@
 import { applyEdits, format as jsoncFormat } from "jsonc-parser";
-import { parseDocument } from "yaml";
+import { parseAllDocuments } from "yaml";
 import { offsetToPosition } from "./position";
 
 /** Indentation options shared by every formatter. */
@@ -39,18 +39,32 @@ export function formatJsonc(text: string, opts: IndentOptions): string {
 }
 
 /**
- * Re-indents YAML via a Document round-trip, which keeps comments intact.
+ * Re-indents YAML (including multi-document streams) via a Document
+ * round-trip, which keeps comments intact.
  * YAML forbids tab indentation, so tab config falls back to indentSize spaces.
  */
 export function formatYaml(text: string, opts: YamlFormatOptions): string {
-	const doc = parseDocument(text);
-	if (doc.errors.length > 0) {
-		throw yamlErrorToFormatError(text, doc.errors[0]);
+	const docs = parseAllDocuments(text);
+	// Empty, whitespace-only and comment-only input parse to zero documents;
+	// leave it alone rather than emitting `null` or dropping the comments.
+	if (docs.length === 0) {
+		return text;
 	}
-	return doc.toString({
-		indent: opts.indentSize,
-		lineWidth: opts.lineWidth,
-	});
+	for (const doc of docs) {
+		if (doc.errors.length > 0) {
+			throw yamlErrorToFormatError(text, doc.errors[0]);
+		}
+	}
+	// Each document emits its own `---` / `...` markers, so plain concatenation
+	// preserves the original document boundaries.
+	return docs
+		.map((doc) =>
+			doc.toString({
+				indent: opts.indentSize,
+				lineWidth: opts.lineWidth,
+			}),
+		)
+		.join("");
 }
 
 /** Converts a yaml YAMLError (pos is a [start, end] offset tuple) into a FormatError. */

@@ -6,6 +6,7 @@ import {
 	debounce,
 } from "obsidian";
 import type { ViewStateResult } from "obsidian";
+import { _ } from "../i18n";
 import {
 	Compartment,
 	EditorState,
@@ -103,6 +104,7 @@ export class CtxView extends ItemView {
 	private editor: EditorView | null = null;
 	private dirty = false;
 	private fileDeleted = false;
+	private saving = false;
 	/** mtime of the last write we made ourselves — external-change guard. */
 	private lastSavedMtime = 0;
 
@@ -167,16 +169,16 @@ export class CtxView extends ItemView {
 		this.dirtyEl.hide();
 		const actions = header.createDiv({ cls: "materin-ctx-actions" });
 		actions
-			.createEl("button", { text: "格式化" })
+			.createEl("button", { text: _("Format") })
 			.addEventListener("click", () => this.formatDocument());
 		actions
-			.createEl("button", { text: "全部折叠" })
+			.createEl("button", { text: _("Fold all") })
 			.addEventListener("click", () => this.foldAllNodes());
 		actions
-			.createEl("button", { text: "全部展开" })
+			.createEl("button", { text: _("Unfold all") })
 			.addEventListener("click", () => this.unfoldAllNodes());
 		this.saveButton = actions.createEl("button", {
-			text: "保存",
+			text: _("Save"),
 			cls: "materin-ctx-save",
 		});
 		this.saveButton.addEventListener("click", () => {
@@ -250,21 +252,21 @@ export class CtxView extends ItemView {
 			if (error instanceof FormatError) {
 				this.setStatus(
 					"error",
-					`格式化失败：第 ${error.line} 行第 ${error.column} 列 — ${error.message}`,
+					_("Format failed: line {line}, column {column} — {message}", { line: error.line, column: error.column, message: error.message }),
 				);
 			} else {
-				this.setStatus("error", `格式化失败：${String(error)}`);
+				this.setStatus("error", _("Format failed: {message}", { message: String(error) }));
 			}
 			return;
 		}
 		if (formatted === text) {
-			this.setStatus("ok", "格式无变化");
+			this.setStatus("ok", _("Already formatted"));
 			return;
 		}
 		view.dispatch({
 			changes: { from: 0, to: view.state.doc.length, insert: formatted },
 		});
-		this.setStatus("ok", "已格式化（未保存）");
+		this.setStatus("ok", _("Formatted (unsaved)"));
 	}
 
 	foldAllNodes(): void {
@@ -286,10 +288,19 @@ export class CtxView extends ItemView {
 			return;
 		}
 		const text = view.state.doc.toString();
-		await this.app.vault.modify(file, applyEol(text, this.originalEol));
+		this.saving = true;
+		try {
+			await this.app.vault.modify(file, applyEol(text, this.originalEol));
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			this.setStatus("error", _("Save failed: {message}", { message }));
+			return;
+		} finally {
+			this.saving = false;
+		}
 		this.lastSavedMtime = file.stat.mtime;
 		this.setDirty(false);
-		this.setStatus("ok", "已保存");
+		this.setStatus("ok", _("Saved"));
 	}
 
 	private async loadFile(file: TFile): Promise<void> {
@@ -303,7 +314,7 @@ export class CtxView extends ItemView {
 
 		this.titleEl.setText(file.name);
 		this.badgeEl.setText(KIND_LABELS[this.kind]);
-		this.badgeEl.addClass(`materin-ctx-badge-${this.kind}`);
+		this.badgeEl.className = `materin-ctx-badge materin-ctx-badge-${this.kind}`;
 		this.hideBanner();
 		this.buildEditor(content);
 		this.setDirty(false);
@@ -376,7 +387,9 @@ export class CtxView extends ItemView {
 				".cm-content": {
 					caretColor: "var(--text-accent)",
 				},
-				".cm-selectionBackground, &.cm-focused > .cm-scroller .cm-selectionBackground":
+				// The focused selector must include `> .cm-selectionLayer` to out-rank
+				// CodeMirror's base theme, otherwise its lavender default wins.
+				".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground":
 					{ backgroundColor: "var(--text-selection)" },
 				".cm-cursor": {
 					borderLeftColor: "var(--text-accent)",
@@ -386,8 +399,10 @@ export class CtxView extends ItemView {
 					borderColor: "var(--background-modifier-border)",
 					color: "var(--text-faint)",
 				},
+				// Must be translucent: drawSelection paints the selection in a layer
+				// beneath the line content, so an opaque active line hides it.
 				".cm-activeLine": {
-					backgroundColor: "var(--background-secondary)",
+					backgroundColor: "var(--background-modifier-hover)",
 				},
 				".cm-activeLineGutter": {
 					backgroundColor: "var(--background-secondary)",
@@ -446,7 +461,7 @@ export class CtxView extends ItemView {
 
 	private setDirty(value: boolean): void {
 		this.dirty = value;
-		this.dirtyEl.toggle(!value);
+		this.dirtyEl.toggle(value);
 		this.saveButton.disabled = !value || this.fileDeleted;
 	}
 
@@ -460,13 +475,13 @@ export class CtxView extends ItemView {
 		if (result.ok) {
 			this.setStatus(
 				"ok",
-				`${KIND_LABELS[this.kind]} 有效 · ${view.state.doc.lines} 行`,
+				_("Valid {kind} · {lines} lines", { kind: KIND_LABELS[this.kind], lines: view.state.doc.lines }),
 			);
 			return;
 		}
 		const errorEl = this.setStatus(
 			"error",
-			`第 ${result.line} 行第 ${result.column} 列 — ${result.message}（点击定位）`,
+			_("Line {line}, column {column} — {message} (click to jump)", { line: result.line, column: result.column, message: result.message }),
 		);
 		errorEl.addEventListener("click", () => {
 			this.jumpToPosition(result.line, result.column);
@@ -501,7 +516,7 @@ export class CtxView extends ItemView {
 		this.bannerEl.createSpan({ text: message });
 		if (withReload) {
 			this.bannerEl
-				.createEl("button", { text: "重载" })
+				.createEl("button", { text: _("Reload") })
 				.addEventListener("click", () => {
 					void this.reloadFromDisk();
 				});
@@ -534,11 +549,11 @@ export class CtxView extends ItemView {
 		if (!(file instanceof TFile) || file !== this.file) {
 			return;
 		}
-		if (file.stat.mtime === this.lastSavedMtime) {
+		if (this.saving || file.stat.mtime === this.lastSavedMtime) {
 			return; // our own save echoing back
 		}
 		if (this.dirty) {
-			this.showBanner("文件已在磁盘上被修改。重载将丢弃未保存的改动。", true);
+			this.showBanner(_("File was modified on disk. Reloading will discard unsaved changes."), true);
 		} else {
 			void this.reloadFromDisk();
 		}
@@ -550,7 +565,7 @@ export class CtxView extends ItemView {
 		}
 		this.fileDeleted = true;
 		this.saveButton.disabled = true;
-		this.showBanner("文件已被删除或移动，编辑器内容仅供查看。", false);
+		this.showBanner(_("File was deleted or moved. Editor contents are read-only."), false);
 	}
 
 	private onVaultRename(file: TAbstractFile, oldPath: string): void {

@@ -1,5 +1,5 @@
 import { parse as parseJsonc, type ParseError } from "jsonc-parser";
-import { parseDocument } from "yaml";
+import { parseAllDocuments } from "yaml";
 import type { DocKind } from "./detect";
 import { offsetToPosition } from "./position";
 import { yamlErrorToFormatError } from "./format";
@@ -10,18 +10,20 @@ export type ValidationResult =
 
 /**
  * Syntax-checks a document without mutating it. json/jsonc are checked with
- * jsonc-parser (jsonc allows trailing commas); yaml goes through parseDocument.
+ * jsonc-parser (jsonc allows trailing commas); yaml goes through parseAllDocuments.
  */
 export function validateDocument(
 	text: string,
 	kind: DocKind,
 ): ValidationResult {
 	if (kind === "yaml") {
-		const doc = parseDocument(text);
-		if (doc.errors.length === 0) {
+		const firstError = parseAllDocuments(text).find(
+			(doc) => doc.errors.length > 0,
+		)?.errors[0];
+		if (!firstError) {
 			return { ok: true };
 		}
-		const error = yamlErrorToFormatError(text, doc.errors[0]);
+		const error = yamlErrorToFormatError(text, firstError);
 		return {
 			ok: false,
 			message: error.message,

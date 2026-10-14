@@ -1,5 +1,6 @@
 import { PluginSettingTab, Setting } from "obsidian";
 import type MaterinCtxPlugin from "./main";
+import { _ } from "./i18n";
 
 export interface MaterinCtxSettings {
 	/** Indentation character used by the editor and the formatter. */
@@ -41,11 +42,11 @@ export class MaterinCtxSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Indent character")
-			.setDesc("缩进字符。YAML 规范禁止 Tab 缩进，YAML 格式化会退回使用空格。")
+			.setDesc(_("Character used for indentation. YAML forbids tab indentation, so YAML formatting falls back to spaces."))
 			.addDropdown((dropdown) =>
 				dropdown
-					.addOption("space", "空格")
-					.addOption("tab", "Tab")
+					.addOption("space", _("Spaces"))
+					.addOption("tab", _("Tab"))
 					.setValue(this.plugin.settings.indentType)
 					.onChange(async (value) => {
 						await this.updateSettings({
@@ -56,7 +57,7 @@ export class MaterinCtxSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Indent size")
-			.setDesc("缩进宽度（空格数或 Tab 宽度）。")
+			.setDesc(_("Indent width (number of spaces, or tab width)."))
 			.addDropdown((dropdown) => {
 				for (const size of INDENT_SIZES) {
 					dropdown.addOption(String(size), String(size));
@@ -70,7 +71,7 @@ export class MaterinCtxSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Wrap long lines")
-			.setDesc("超长行自动换行显示（不影响文件内容）。")
+			.setDesc(_("Visually wrap long lines (does not change the file contents)."))
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.wrapLines)
@@ -81,7 +82,7 @@ export class MaterinCtxSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Line numbers")
-			.setDesc("在编辑器左侧显示行号。")
+			.setDesc(_("Show line numbers in the editor gutter."))
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.showLineNumbers)
@@ -92,11 +93,11 @@ export class MaterinCtxSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Fold on open")
-			.setDesc("打开文件时是否折叠所有可折叠节点。")
+			.setDesc(_("Fold all foldable nodes when a file is opened."))
 			.addDropdown((dropdown) =>
 				dropdown
-					.addOption("none", "不折叠")
-					.addOption("all", "全部折叠")
+					.addOption("none", _("Don't fold"))
+					.addOption("all", _("Fold all"))
 					.setValue(this.plugin.settings.foldOnOpen)
 					.onChange(async (value) => {
 						await this.updateSettings({
@@ -107,7 +108,7 @@ export class MaterinCtxSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("YAML line width")
-			.setDesc("格式化 YAML 时的最大行宽，0 表示不限制。")
+			.setDesc(_("Maximum line width when formatting YAML. 0 means unlimited."))
 			.addText((text) =>
 				text
 					.setPlaceholder("0")
